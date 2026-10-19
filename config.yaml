@@ -1,0 +1,35 @@
+audio:
+  compression: true
+  noise_reduction: false
+  speech_filter: false
+  peak_db: -1.0
+asr:
+  chunk_length: 24
+  overlap: 4
+  block_length: 120
+  punctuator: true
+  beams: 3
+  # Filled with immutable upstream revision in the tested setup.
+  revision: 57a9d8ab771a0124706b67d22509bedd07c36187
+review:
+  quiet_db: -43
+  gap_seconds: 2
+  max_caption_seconds: 10
+translation:
+  provider: manual
+  manual_max_chars: 3500
+  manual_batch_segments: 60
+  manual_context_segments: 2
+  browser_visible: true
+  browser_format: json
+  browser_profile: .browser-profile
+  browser_channel: chrome
+  browser_stealth: false
+  local_model: Qwen/Qwen2.5-1.5B-Instruct
+  device: auto
+  batch_segments: 6
+  context_segments: 3
+  endpoint: http://localhost:11434/v1/chat/completions
+  api_model: qwen2.5:7b
+  api_key_env: TRANSLATION_API_KEY
+  glossary: {}

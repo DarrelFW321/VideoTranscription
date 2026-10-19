@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{TITLE}} — Subtitle player</title>
+<style>
+:root{color-scheme:dark;font-family:Segoe UI,system-ui,sans-serif;background:#141716;color:#f2f3ee}
+*{box-sizing:border-box}body{margin:0}main{max-width:1040px;margin:auto;padding:24px}h1{font-size:clamp(22px,4vw,36px);overflow-wrap:anywhere;font-weight:600}header p{color:#aebbb2;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.stage{position:relative;background:#090b0a;aspect-ratio:16/10;display:grid;place-items:center;overflow:hidden;border-radius:8px}.stage img{width:100%;height:100%;position:absolute;object-fit:contain}.placeholder{color:#aebbb2}
+#caption{position:absolute;bottom:5%;left:5%;right:5%;text-align:center;white-space:pre-line;font-size:clamp(17px,3vw,28px);line-height:1.5}#caption span{background:#000d;box-decoration-break:clone;padding:3px 8px}
+audio{width:100%;margin:16px 0}.toolbar{display:flex;gap:16px;align-items:center;flex-wrap:wrap}select{padding:8px;background:#252e28;color:inherit;border:1px solid #617567;border-radius:4px}#transcript{margin-top:24px;max-height:340px;overflow:auto;border-top:1px solid #39473e}button{display:block;width:100%;text-align:left;padding:14px;border:0;border-bottom:1px solid #39473e;background:transparent;color:inherit;cursor:pointer;font:inherit}button:hover,button.active{background:#293f30}button:focus-visible,select:focus-visible{outline:2px solid #b8eac2;outline-offset:-2px}time{color:#b8cabc;font-size:13px;margin-right:16px}#error{color:#ffb8a5} @media(max-width:420px){main{padding:12px}.stage{aspect-ratio:1}}
+</style>
+<main><header><p>Subtitle player · Local recording</p><h1>{{TITLE}}</h1></header>
+<div class="stage">{{POSTER}}<div id="caption"><span></span></div></div>
+<audio id="audio" controls preload="metadata" src="playback.mp3"></audio><p id="error" role="status"></p>
+<div class="toolbar"><label>Captions <select id="language"><option value="both">English + Japanese</option><option value="en">English</option><option value="ja">Japanese</option><option value="off">Off</option></select></label><label>Speed <select id="speed"><option value="0.75">0.75×</option><option selected value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label><span>Click a transcript line to seek.</span></div>
+<div id="transcript" aria-label="Transcript"></div></main>
+<script id="captions" type="application/json">{{DATA}}</script>
+<script>
+const data=JSON.parse(document.getElementById('captions').textContent), audio=document.getElementById('audio'), language=document.getElementById('language'), transcript=document.getElementById('transcript'), caption=document.querySelector('#caption span');
+if(!data.en.length){language.value='ja';for(const option of language.options)if(['en','both'].includes(option.value))option.disabled=true;}
+const stamp=t=>`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`;
+function words(i){return language.value==='off'?'':language.value==='ja'?data.ja[i].text:language.value==='en'?data.en[i]?.text||'':[data.en[i]?.text,data.ja[i].text].filter(Boolean).join('\n');}
+function render(){transcript.replaceChildren();data.ja.forEach((s,i)=>{const b=document.createElement('button'),t=document.createElement('time');t.textContent=stamp(s.start);b.append(t,document.createTextNode(words(i)||s.text));b.onclick=()=>{audio.currentTime=s.start;audio.play().catch(()=>{});};transcript.append(b);});sync();}
+function sync(){const active=[];data.ja.forEach((s,i)=>{const on=s.start<=audio.currentTime&&audio.currentTime<s.end;transcript.children[i]?.classList.toggle('active',on);if(on)active.push(words(i));});caption.textContent=active.filter(Boolean).join('\n');caption.hidden=!caption.textContent;}
+audio.addEventListener('timeupdate',sync);audio.addEventListener('seeked',sync);audio.addEventListener('error',()=>document.getElementById('error').textContent='Audio could not be loaded. Keep watch.html beside playback.mp3 and rerun the watch command.');language.onchange=render;document.getElementById('speed').onchange=e=>audio.playbackRate=Number(e.target.value);render();
+</script></html>
